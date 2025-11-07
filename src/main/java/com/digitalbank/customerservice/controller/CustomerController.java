@@ -2,6 +2,7 @@ package com.digitalbank.customerservice.controller;
 
 import com.digitalbank.customerservice.dto.CustomerCreatedResponse;
 import com.digitalbank.customerservice.dto.CustomerRequest;
+import com.digitalbank.customerservice.dto.CustomerResponse;
 import com.digitalbank.customerservice.dto.UpdateKycStatusRequest;
 import com.digitalbank.customerservice.service.CustomerService;
 import jakarta.validation.Valid;
@@ -36,5 +37,13 @@ public class CustomerController {
         return ResponseEntity.noContent()
                 .eTag("\"" + newVersion + "\"")
                 .build();
+    }
+
+    @GetMapping("/customers/{externalId}")
+    public ResponseEntity<CustomerResponse> getCustomerByExternalId(@PathVariable String externalId){
+
+        CustomerResponse dto = service.getByExternalId(externalId);
+
+        return ResponseEntity.ok().eTag("\""+ dto.getVersion() +"\"").body(dto);
     }
 }

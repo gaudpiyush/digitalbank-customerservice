@@ -4,6 +4,7 @@ import com.commons.exception.ConflictException;
 import com.commons.exception.ResourceNotFoundException;
 import com.digitalbank.customerservice.dto.CustomerCreatedResponse;
 import com.digitalbank.customerservice.dto.CustomerRequest;
+import com.digitalbank.customerservice.dto.CustomerResponse;
 import com.digitalbank.customerservice.mapper.CustomerMapper;
 import com.digitalbank.customerservice.model.Customer;
 import com.digitalbank.customerservice.model.KycStatus;
@@ -55,8 +56,8 @@ public class CustomerService {
         return mapper.toCreateResponse(saved);
     }
 
-    public Integer updateKycStatus(String id, String kycStatus) {
-        Customer c = repository.findByExternalId(id).orElseThrow(() -> new ResourceNotFoundException("Customer not found with externalId: " + id));
+    public Integer updateKycStatus(String externalId, String kycStatus) {
+        Customer c = repository.findByExternalId(externalId).orElseThrow(() -> new ResourceNotFoundException("Customer not found with externalId: " + externalId));
 
         if ("VERIFIED".equalsIgnoreCase(kycStatus)) {
             c.setKycStatus(KycStatus.VERIFIED);
@@ -64,5 +65,11 @@ public class CustomerService {
             repository.save(c);
         }
         return c.getVersion();
+    }
+
+    public CustomerResponse getByExternalId(String externalId){
+        Customer customer = repository.findByExternalId(externalId).orElseThrow(() -> new ResourceNotFoundException("Customer not found with externalId: " + externalId));
+
+        return mapper.toResponse(customer);
     }
 }
