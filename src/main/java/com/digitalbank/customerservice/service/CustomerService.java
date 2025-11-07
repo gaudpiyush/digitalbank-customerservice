@@ -72,4 +72,8 @@ public class CustomerService {
 
         return mapper.toResponse(customer);
     }
+
+    public boolean exists(String externalId) {
+        return repository.findByExternalId(externalId).isPresent();
+    }
 }

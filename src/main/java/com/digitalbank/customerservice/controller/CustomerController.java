@@ -46,4 +46,9 @@ public class CustomerController {
 
         return ResponseEntity.ok().eTag("\""+ dto.getVersion() +"\"").body(dto);
     }
+
+    @GetMapping("/customers/{externalId}/exists")
+    public boolean exists(@PathVariable String externalId){
+        return service.exists(externalId);
+    }
 }
