@@ -1,9 +1,6 @@
 package com.digitalbank.customerservice.controller;
 
-import com.digitalbank.customerservice.dto.CustomerCreatedResponse;
-import com.digitalbank.customerservice.dto.CustomerRequest;
-import com.digitalbank.customerservice.dto.CustomerResponse;
-import com.digitalbank.customerservice.dto.UpdateKycStatusRequest;
+import com.digitalbank.customerservice.dto.*;
 import com.digitalbank.customerservice.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +36,19 @@ public class CustomerController {
                 .build();
     }
 
+    @PatchMapping("/customers/{externalId}")
+    public ResponseEntity <Void> updateCustomer(
+            @PathVariable String externalId,
+            @RequestHeader(name = "If-Match", required = true) String ifMatch,
+            @RequestBody UpdateCustomerRequest request){
+
+        Integer expected = parseIfMatch(ifMatch);
+        Integer newVersion = service.updateCustomer(externalId, request, expected);
+
+        // Return 200 OK, no body, only ETag
+        return ResponseEntity.ok().eTag("\""+newVersion+"\"").build();
+    }
+
     @GetMapping("/customers/{externalId}")
     public ResponseEntity<CustomerResponse> getCustomerByExternalId(@PathVariable String externalId){
 
@@ -55,5 +65,12 @@ public class CustomerController {
     @GetMapping("/customers/exists")
     public ResponseEntity<Boolean> existsByEmail(@RequestParam String email){
         return ResponseEntity.ok(service.existsByEmail(email));
+    }
+
+    private Integer parseIfMatch(String ifMatch) {
+        if (ifMatch == null || ifMatch.isBlank()) return null;
+        // Accept bare numbers (e.g. 3) or quoted ("3")
+        String v = ifMatch.replace("\"", "").trim();
+        return Integer.valueOf(v);
     }
 }

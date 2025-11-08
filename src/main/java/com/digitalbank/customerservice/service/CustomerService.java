@@ -1,10 +1,14 @@
 package com.digitalbank.customerservice.service;
 
 import com.commons.exception.ConflictException;
+import com.commons.exception.CustomerNotFoundException;
 import com.commons.exception.ResourceNotFoundException;
+import com.commons.exception.PreconditionRequiredException;
+import com.commons.exception.VersionMismatchException;
 import com.digitalbank.customerservice.dto.CustomerCreatedResponse;
 import com.digitalbank.customerservice.dto.CustomerRequest;
 import com.digitalbank.customerservice.dto.CustomerResponse;
+import com.digitalbank.customerservice.dto.UpdateCustomerRequest;
 import com.digitalbank.customerservice.mapper.CustomerMapper;
 import com.digitalbank.customerservice.model.Customer;
 import com.digitalbank.customerservice.model.KycStatus;
@@ -79,5 +83,19 @@ public class CustomerService {
 
     public boolean existsByEmail(String email){
         return repository.findByEmail(email).isPresent();
+    }
+
+    public Integer updateCustomer(String id, UpdateCustomerRequest request, Integer expected) {
+
+        Customer customer = repository.findByExternalId(id).orElseThrow(() -> new CustomerNotFoundException("Customer not found: " + id));
+
+        if (expected == null)
+            throw new PreconditionRequiredException("If-Match header required");
+        if (!expected.equals(customer.getVersion()))
+            throw new VersionMismatchException("Stale version. Current=" + customer.getVersion() + ", If-Match=" + expected);
+
+        mapper.updateCustomerFromRequest(request, customer);
+        Customer saved = repository.save(customer);
+        return mapper.toResponse(saved).getVersion();
     }
 }
